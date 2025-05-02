@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/JerryJeager/exandoe-backend/config"
+	"github.com/JerryJeager/exandoe-backend/internal/models"
 	"github.com/JerryJeager/exandoe-backend/internal/service/users"
 	"github.com/gin-gonic/gin"
 )
@@ -69,9 +70,33 @@ func (c *UserController) Signin(ctx *gin.Context) {
 
 	// Keep connection alive
 	for {
-		_, _, err := conn.ReadMessage()
+		var msg models.ChallengeMessage
+		err := conn.ReadJSON(&msg)
 		if err != nil {
-			break
+			break // client disconnected or sent invalid data
+		}
+
+		switch msg.Type {
+		case "challenge_request":
+			if receiverConn, ok := config.WS.Clients[msg.To]; ok {
+				receiverConn.WriteJSON(msg)
+			}
+		case "challenge_response":
+			if receiverConn, ok := config.WS.Clients[msg.From]; ok {
+				receiverConn.WriteJSON(msg)
+			}
+			if msg.Accepted != nil && *msg.Accepted {
+				roomID := "game-" + msg.From + "-" + msg.To
+				config.ActiveGames[roomID] = []*models.Player{{Username: msg.From, Conn: config.WS.Clients[msg.From]}, {Username: msg.To, Conn: config.WS.Clients[msg.To]}}
+
+				startMsg := map[string]interface{}{
+					"type":    "start_game",
+					"room_id": roomID,
+				}
+				config.WS.Clients[msg.From].WriteJSON(startMsg)
+				config.WS.Clients[msg.To].WriteJSON(startMsg)
+			}
+		default:
 		}
 	}
 }

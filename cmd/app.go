@@ -26,7 +26,7 @@ func ExecuteApiRoutes() {
 	users := api.Group("/users")
 
 
-	users.GET("/signin", userController.Signin)
+	users.GET("/lobby", userController.Signin)
 		
 
 	

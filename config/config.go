@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/JerryJeager/exandoe-backend/internal/models"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -19,7 +20,10 @@ type WebsocketConfig struct {
 	Upgrader websocket.Upgrader
 }
 
+
 var WS WebsocketConfig
+
+var ActiveGames  =  map[string][]*models.Player{}
 
 func GetSession() *gorm.DB {
 	return Session
