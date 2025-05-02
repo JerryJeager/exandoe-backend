@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Exandoe MVP</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #111; color: #eee; }
+    #users { margin-top: 1rem; }
+    button { margin-left: 1rem; }
+  </style>
+</head>
+<body>
+  <h2>Exandoe MVP Test</h2>
+  <label>Enter your display name:
+    <input type="text" id="username" />
+    <button onclick="connect()">Sign In</button>
+  </label>
+
+  <div id="status"></div>
+  <h3>Online Users:</h3>
+  <ul id="users"></ul>
+
+  <script>
+    let socket;
+
+    function connect() {
+      const username = document.getElementById('username').value.trim();
+      if (!username) {
+        alert("Enter a username.");
+        return;
+      }
+
+      // Replace this with your actual backend server if needed
+      socket = new WebSocket(`ws://localhost:8080/api/v1/users/signin?username=${username}`);
+
+      socket.onopen = () => {
+        document.getElementById("status").innerText = `Connected as ${username}`;
+      };
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "online_users") {
+          const userList = document.getElementById("users");
+          userList.innerHTML = "";
+
+          data.users.forEach(user => {
+            const li = document.createElement("li");
+            li.textContent = user;
+
+            if (user !== username) {
+              const btn = document.createElement("button");
+              btn.textContent = "Challenge";
+              btn.onclick = () => alert(`Challenge sent to ${user} (not implemented yet)`);
+              li.appendChild(btn);
+            }
+
+            userList.appendChild(li);
+          });
+        }
+      };
+
+      socket.onclose = () => {
+        document.getElementById("status").innerText = "Disconnected";
+      };
+    }
+  </script>
+</body>
+</html>
