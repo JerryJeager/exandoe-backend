@@ -21,14 +21,16 @@ func ExecuteApiRoutes() {
 	})
 	
 	userController := manualwire.GetUserController()
+	gameController := manualwire.GetGameController()
 	
 	api := router.Group("/api/v1")
 	users := api.Group("/users")
+	games := api.Group("/games")
 
 
 	users.GET("/lobby", userController.Signin)
 		
-
+	games.GET("/play", gameController.Play)
 	
 
 	port := os.Getenv("PORT")

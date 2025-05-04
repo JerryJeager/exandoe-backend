@@ -7,6 +7,7 @@ import (
 	"github.com/JerryJeager/exandoe-backend/internal/models"
 	"github.com/JerryJeager/exandoe-backend/internal/service/users"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type UserController struct {
@@ -86,15 +87,32 @@ func (c *UserController) Signin(ctx *gin.Context) {
 				receiverConn.WriteJSON(msg)
 			}
 			if msg.Accepted != nil && *msg.Accepted {
-				roomID := "game-" + msg.From + "-" + msg.To
-				config.ActiveGames[roomID] = []*models.Player{{Username: msg.From, Conn: config.WS.Clients[msg.From]}, {Username: msg.To, Conn: config.WS.Clients[msg.To]}}
+				roomID := uuid.New().String()
+				config.ActiveGames[roomID] = []*models.Player{{Username: msg.From, Conn: config.WS.Clients[msg.From], Piece: "x"}, {Username: msg.To, Conn: config.WS.Clients[msg.To], Piece: "o"}}
 
 				startMsg := map[string]interface{}{
 					"type":    "start_game",
 					"room_id": roomID,
+					"piece": map[string]string{
+						"x": msg.From,
+						"o": msg.To,
+					},
 				}
 				config.WS.Clients[msg.From].WriteJSON(startMsg)
 				config.WS.Clients[msg.To].WriteJSON(startMsg)
+
+				gameMove := models.GameMove{
+					Status:  "stale",
+					Room:    roomID,
+					Turn:    "x",
+					Board1D: []string{"", "", "", "", "", "", "", "", ""},
+					Board3D: [3][3]string{
+						{"", "", ""},
+						{"", "", ""},
+						{"", "", ""},
+					},
+				}
+				config.Games = append(config.Games, gameMove)
 			}
 		default:
 		}

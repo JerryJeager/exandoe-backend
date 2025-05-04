@@ -20,6 +20,8 @@ type WebsocketConfig struct {
 	Upgrader websocket.Upgrader
 }
 
+var Games []models.GameMove
+
 
 var WS WebsocketConfig
 

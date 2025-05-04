@@ -24,6 +24,8 @@ func (c *GameController) Play(ctx *gin.Context) {
 	}
 	defer conn.Close()
 
+
+
 	room := ctx.Query("room")
 	username := ctx.Query("username")
 
@@ -46,12 +48,15 @@ func (c *GameController) Play(ctx *gin.Context) {
 	}
 	config.ActiveGames[room] = players
 
+
 	for {
 		var move models.GameMove
 		err := conn.ReadJSON(&move)
 		if err != nil {
 			break
 		}
+
+		c.serv.Play(&move)
 
 		// Broadcast to opponent
 		for _, p := range players {
