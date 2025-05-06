@@ -40,10 +40,14 @@ func (s *GameServ) Play(mv *models.GameMove) {
 
 	for i := range config.Games {
 		if config.Games[i].Room == mv.Room {
-			config.Games[i] = *mv
+			config.Games[i].Board1D = mv.Board1D
+			config.Games[i].Board3D = mv.Board3D
+			config.Games[i].Turn = mv.Turn
+			config.Games[i].Status = mv.Status
 			break
 		}
 	}
+
 }
 
 func isBoardFull(mv *models.GameMove) bool {
@@ -57,10 +61,17 @@ func isBoardFull(mv *models.GameMove) bool {
 }
 
 func updateBoard(mv *models.GameMove) {
-	symbol := mv.Turn
-	mv.Board1D[mv.Index] = symbol
+	fmt.Printf("Updating board at index: %d with symbol: %s\n", mv.Index, mv.Turn)
+	fmt.Println("Before update:", mv.Board1D)
 
-	count := 1
+	symbol := mv.Turn
+	if mv.Board1D[mv.Index] == "" {
+		mv.Board1D[mv.Index] = symbol
+	}
+
+	fmt.Println("After update:", mv.Board1D)
+
+	count := 0
 	for i := 0; i < len(mv.Board3D); i++ {
 		for j := 0; j < len(mv.Board3D); j++ {
 			if count == mv.Index && mv.Board3D[i][j] == "" {

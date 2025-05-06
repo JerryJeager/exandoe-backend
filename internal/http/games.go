@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/JerryJeager/exandoe-backend/config"
@@ -24,8 +25,6 @@ func (c *GameController) Play(ctx *gin.Context) {
 	}
 	defer conn.Close()
 
-
-
 	room := ctx.Query("room")
 	username := ctx.Query("username")
 
@@ -48,6 +47,12 @@ func (c *GameController) Play(ctx *gin.Context) {
 	}
 	config.ActiveGames[room] = players
 
+	for i := range config.Games {
+		if config.Games[i].Room == room {
+			conn.WriteJSON(config.Games[i])
+			break
+		}
+	}
 
 	for {
 		var move models.GameMove
@@ -55,12 +60,15 @@ func (c *GameController) Play(ctx *gin.Context) {
 		if err != nil {
 			break
 		}
+		fmt.Printf("Received move: %+v\n", move)
 
 		c.serv.Play(&move)
 
 		// Broadcast to opponent
 		for _, p := range players {
-			if p.Username != username {
+			if move.Status != "stale" {
+				_ = p.Conn.WriteJSON(move)
+			} else if p.Username != username {
 				_ = p.Conn.WriteJSON(move)
 			}
 		}
